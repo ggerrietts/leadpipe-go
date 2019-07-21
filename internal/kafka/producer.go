@@ -5,18 +5,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// Producer wraps the Kafka producer
-type Producer interface {
-	Send(string, string)
-}
-
-// KafkaProducer is a thin wrapper around a Sarama producer. It hides the Sarama API
-type KafkaProducer struct {
+// Producer is a thin wrapper around a Sarama producer. It hides the Sarama API
+type Producer struct {
 	producer sarama.SyncProducer
+	topic    string
 }
 
-// NewKafkaProducer creates a new producer given a list of broker addresses
-func NewKafkaProducer(brokers []string) *KafkaProducer {
+// NewProducer creates a new producer given a list of broker addresses
+func NewProducer(brokers []string, topic string) *Producer {
 	config := sarama.NewConfig()
 	config.Producer.RequiredAcks = sarama.WaitForAll // wait for all in-sync replicas to ack
 	config.Producer.Retry.Max = 10
@@ -28,13 +24,14 @@ func NewKafkaProducer(brokers []string) *KafkaProducer {
 	if err != nil {
 		log.WithError(err).Fatal("failed to start sarama producer")
 	}
-	return &KafkaProducer{
+	return &Producer{
 		producer: producer,
+		topic:    topic,
 	}
 }
 
 // Send wraps the sarama producer SendMessage
-func (p *KafkaProducer) Send(visitorID string, payload string) {
+func (p *Producer) Send(visitorID string, payload string) {
 	partition, offset, err := p.producer.SendMessage(&sarama.ProducerMessage{
 		Topic: "hits",
 		Key:   sarama.StringEncoder(visitorID),

@@ -10,23 +10,25 @@ import (
 
 // Server is the collection server
 type Server struct {
-	producer kafka.Producer
+	producer *kafka.Producer
+	address  string
 }
 
 // NewServer generates a new Server
-func NewServer(producer kafka.Producer) *Server {
+func NewServer(producer *kafka.Producer, address string) *Server {
 	return &Server{
 		producer: producer,
+		address:  address,
 	}
 }
 
 // Serve sets up the http handlers and serves forever
 func (s *Server) Serve() {
 	http.Handle("/", generateImageHandler(s.producer))
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(s.address, nil))
 }
 
-func generateImageHandler(producer kafka.Producer) http.HandlerFunc {
+func generateImageHandler(producer *kafka.Producer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Debug("preparing to produce")
 		producer.Send("1234", "hello sweet world")
