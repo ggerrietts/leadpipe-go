@@ -1,7 +1,7 @@
 version: '2'
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:3.0.1
+    image: confluentinc/cp-zookeeper:4.1.3
     ports: 
       - "2181:2181"
     environment:
@@ -12,12 +12,13 @@ services:
       ZOOKEEPER_SYNC_LIMIT: 2
 
   kafka:
-    image: confluentinc/cp-kafka:3.0.1
+    image: confluentinc/cp-kafka:4.1.3
     ports:
       - "9092:9092"
     depends_on:
       - zookeeper
     environment:
       KAFKA_BROKER_ID: 1
+      KAFKA_NUM_PARTITIONS: 5
       KAFKA_ZOOKEEPER_CONNECT: ${MY_IP}:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${MY_IP}:9092

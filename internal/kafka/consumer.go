@@ -8,17 +8,19 @@ import (
 // Use ConsumerGroup from calling code
 
 type Consumer struct {
-	ready chan struct{}
+	ready chan bool
 }
 
 // Setup is run at the beginning of a new session
 func (c *Consumer) Setup(sarama.ConsumerGroupSession) error {
+	log.Debug("consumer setup")
 	close(c.ready)
 	return nil
 }
 
 // Cleanup is run at the end of a session
 func (c *Consumer) Cleanup(sarama.ConsumerGroupSession) error {
+	log.Debug("consumer cleanup")
 	return nil
 }
 

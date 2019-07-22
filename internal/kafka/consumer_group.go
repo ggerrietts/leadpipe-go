@@ -37,7 +37,7 @@ func NewConsumerGroup(in ConsumerGroupConfig) *ConsumerGroup {
 
 	client, err := sarama.NewConsumerGroup(in.Brokers, in.ConsumerGroup, config)
 	if err != nil {
-		log.WithError(err).Fatal("error starting consumer group")
+		log.WithError(err).WithField("brokers", in.Brokers).WithField("cg", in.ConsumerGroup).Fatal("error starting consumer group")
 	}
 
 	return &ConsumerGroup{
@@ -48,9 +48,10 @@ func NewConsumerGroup(in ConsumerGroupConfig) *ConsumerGroup {
 
 // Consume starts up the ConsumerGroup
 func (cg *ConsumerGroup) Consume() {
-	// fff
+	log.Debug("starting Consume")
+
 	consumer := Consumer{
-		ready: make(chan struct{}, 0),
+		ready: make(chan bool, 0),
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -59,15 +60,19 @@ func (cg *ConsumerGroup) Consume() {
 		wg.Add(1)
 		defer wg.Done()
 		for {
-			if err := cg.client.Consume(ctx, []string{cg.topic}, &consumer); err != nil {
+			log.Debug("mmmm so hungry")
+			topics := []string{cg.topic}
+			if err := cg.client.Consume(ctx, topics, &consumer); err != nil {
 				log.WithError(err).Panic("error from consumer")
 			}
+
 			if ctx.Err() != nil {
 				return
 			}
-			consumer.ready = make(chan struct{}, 0)
+			consumer.ready = make(chan bool, 0)
 		}
 	}()
+	log.Debug("waiting for godot")
 	<-consumer.ready
 	log.Debug("consumer up and running")
 

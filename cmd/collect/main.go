@@ -34,7 +34,7 @@ func emitBootBanner(addr string, brokers []string, topic string) {
 	[-] Brokers at: %v
 	[-] Logging level: %v
 	[-] Topic: %v
-	`
+`
 	fmt.Printf(msg, addr, brokers, log.GetLevel().String(), topic)
 }
 
@@ -45,10 +45,10 @@ func main() {
 	listenAddr := cfg.GetString(config.CollectorAddr)
 	topic := cfg.GetString(config.KafkaTopic)
 
+	emitBootBanner(listenAddr, brokers, topic)
+
 	producer := kafka.NewProducer(brokers, topic)
 	server := collect.NewServer(producer, listenAddr)
-
-	emitBootBanner(listenAddr, brokers, topic)
 
 	server.Serve()
 }
