@@ -1,6 +1,10 @@
 package config
 
-import "github.com/spf13/viper"
+import (
+	"runtime"
+
+	"github.com/spf13/viper"
+)
 
 // SetDefaults sets up default values for config
 func SetDefaults() {
@@ -9,4 +13,5 @@ func SetDefaults() {
 	viper.SetDefault(KafkaConsumerGroup, "leadpipe")
 	viper.SetDefault(KafkaTopic, "hits")
 	viper.SetDefault(CollectorAddr, ":8080")
+	viper.SetDefault(MessageChannelDepth, 2*runtime.GOMAXPROCS(0))
 }

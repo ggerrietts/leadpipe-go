@@ -7,4 +7,5 @@ const (
 	KafkaConsumerGroup  = "KAFKA_CONSUMER_GROUP"
 	KafkaClusterVersion = "KAFKA_CLUSTER_VERSION"
 	KafkaTopic          = "KAFKA_TOPIC"
+	MessageChannelDepth = "MESSAGE_CHANNEL_DEPTH"
 )

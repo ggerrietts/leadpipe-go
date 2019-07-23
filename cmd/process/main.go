@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/ggerrietts/leadpipe-go/internal/config"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/segmentio/kafka-go"
+	"github.com/ggerrietts/leadpipe-go/internal/kafka"
 )
 
 func init() {
@@ -21,7 +22,7 @@ func init() {
 	log.SetReportCaller(true)
 }
 
-func emitBootBanner(brokers []string, topic string) {
+func emitBootBanner(brokers []string, topic string, cGroup string) {
 	msg := `
 	 __    ____   __   ____  ____  __  ____  ____  _  ____  ____   __    ___  ____  ____  ____ 
 	(  )  (  __) / _\ (    \(  _ \(  )(  _ \(  __)(_)(  _ \(  _ \ /  \  / __)(  __)/ ___)/ ___)
@@ -31,65 +32,34 @@ func emitBootBanner(brokers []string, topic string) {
 	[-] Brokers at: %v
 	[-] Logging level: %v
 	[-] Topic: %v
+	[-] Consumer Group: %v
 `
-	fmt.Printf(msg, brokers, log.GetLevel().String(), topic)
+	fmt.Printf(msg, brokers, log.GetLevel().String(), topic, cGroup)
 }
 
-// func main() {
-// 	config.Load()
-// 	cfg := config.Load()
-// 	brokers := strings.Split(cfg.GetString(config.KafkaBrokers), ",")
-// 	topic := cfg.GetString(config.KafkaTopic)
-
-// 	emitBootBanner(brokers, topic)
-
-// 	cgConfig := kafka.ConsumerGroupConfig{
-// 		Brokers:       brokers,
-// 		Version:       cfg.GetString(config.KafkaClusterVersion),
-// 		Topic:         topic,
-// 		ConsumerGroup: cfg.GetString(config.KafkaConsumerGroup),
-// 	}
-
-// 	consumerGroup := kafka.NewConsumerGroup(cgConfig)
-
-// 	consumerGroup.Consume()
-// }
-
-var (
-	// kafka
-	kafkaBrokerUrl     string
-	kafkaVerbose       bool
-	kafkaTopic         string
-	kafkaConsumerGroup string
-	kafkaClientId      string
-)
-
 func main() {
-	kafkaBrokerUrl := "192.168.1.10:9092"
-	// kafkaVerbose := true
-	kafkaTopic := "hits"
-	// kafkaConsumerGroup := "leadpipe"
-	// kafkaClientId := "reader"
+	config.Load()
+	cfg := config.Load()
+	brokers := strings.Split(cfg.GetString(config.KafkaBrokers), ",")
+	topic := cfg.GetString(config.KafkaTopic)
+	cGroup := cfg.GetString(config.KafkaConsumerGroup)
+	buffDepth := cfg.GetInt(config.MessageChannelDepth)
 
-	brokers := strings.Split(kafkaBrokerUrl, ",")
+	emitBootBanner(brokers, topic, cGroup)
 
-	emitBootBanner(brokers, kafkaTopic)
+	msgChan := make(chan *kafka.Message, buffDepth)
 
-	r := kafka.NewReader(kafka.ReaderConfig{
-		Brokers: brokers,
-		// GroupID: "leadpipe",
-		Partition: 0,
-		Topic:     kafkaTopic,
-		MinBytes:  10e3,
-		MaxBytes:  10e6,
+	consumer := kafka.NewConsumer(kafka.ConsumerConfig{
+		ConsumerGroupID: cGroup,
+		Topic:           topic,
+		Brokers:         brokers,
+		MessageChan:     msgChan,
 	})
+	defer consumer.Close()
 
-	for {
-		m, err := r.ReadMessage(context.Background())
-		if err != nil {
-			break
-		}
-		fmt.Printf("message at topic/offset %v/%v: %s = %s\n", m.Topic, m.Offset, string(m.Key), string(m.Value))
-	}
+	go func() {
+		consumer.Consume(context.Background())
+	}()
 
+	select {}
 }

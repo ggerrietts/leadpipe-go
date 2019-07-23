@@ -1,35 +1,76 @@
 package kafka
 
 import (
-	"github.com/Shopify/sarama"
+	"context"
+
+	"github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
 )
 
-// Use ConsumerGroup from calling code
+// Message models a key/value message
+type Message struct {
+	VisitorID string
+	Payload   string
+}
 
+// Consumer coordinates the consuming of the queue
 type Consumer struct {
-	ready chan bool
+	msgChan chan *Message
+	reader  *kafka.Reader
 }
 
-// Setup is run at the beginning of a new session
-func (c *Consumer) Setup(sarama.ConsumerGroupSession) error {
-	log.Debug("consumer setup")
-	close(c.ready)
-	return nil
+// ConsumerConfig configures a Consumer
+type ConsumerConfig struct {
+	ConsumerGroupID string
+	Brokers         []string
+	Topic           string
+	MessageChan     chan *Message
 }
 
-// Cleanup is run at the end of a session
-func (c *Consumer) Cleanup(sarama.ConsumerGroupSession) error {
-	log.Debug("consumer cleanup")
-	return nil
-}
-
-// ConsumeClaim begins a loop
-func (c *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
-	for message := range claim.Messages() {
-		// probably write these to a channel, eh
-		log.WithField("key", message.Key).WithField("value", message.Value).Debug("message received")
-		session.MarkMessage(message, "")
+// NewConsumer creates a new consumer
+func NewConsumer(cc ConsumerConfig) *Consumer {
+	reader := kafka.NewReader(kafka.ReaderConfig{
+		Brokers:  cc.Brokers,
+		Topic:    cc.Topic,
+		GroupID:  cc.ConsumerGroupID,
+		MinBytes: 10e3,
+		MaxBytes: 10e6,
+	})
+	return &Consumer{
+		msgChan: cc.MessageChan,
+		reader:  reader,
 	}
-	return nil
+}
+
+// Close closes the reader
+func (c *Consumer) Close() {
+	c.reader.Close()
+}
+
+// MsgChan returns a message channel for consuming
+func (c *Consumer) MsgChan() <-chan *Message {
+	return c.msgChan
+}
+
+// Consume Mass Quantities
+func (c *Consumer) Consume(ctx context.Context) {
+	for {
+		m, err := c.reader.FetchMessage(ctx)
+		if err != nil {
+			log.WithError(err).Error("error reading message")
+			return
+		}
+		msg := Message{
+			VisitorID: string(m.Key),
+			Payload:   string(m.Value),
+		}
+		select {
+		case <-ctx.Done():
+			log.WithField("msg", msg).Info("context timeout")
+			return
+		case c.msgChan <- &msg:
+			log.WithField("msg", msg).Debug("message received loud and clear loud and clear")
+		}
+		c.reader.CommitMessages(ctx, m)
+	}
 }

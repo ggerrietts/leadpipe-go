@@ -155,12 +155,11 @@
   revision = "9beb055b7962d16947a14e1cd718098a2431e20e"
 
 [[projects]]
-  digest = "1:c83d68d06a008bcfc5ffad647a88f0d3ba3ef6ee939423bde63dc436bbc74d85"
+  digest = "1:74a53e872c760aed22ac0e08979a7b411ae6789c1375089d96200ca6a52d49e6"
   name = "github.com/segmentio/kafka-go"
   packages = [
     ".",
     "sasl",
-    "snappy",
   ]
   pruneopts = "UT"
   revision = "0b38267f13d5e17fcf8dfbb89168ef7fb520deb8"
@@ -341,7 +340,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/Shopify/sarama",
-    "github.com/segmentio/kafka-go/snappy",
+    "github.com/segmentio/kafka-go",
     "github.com/sirupsen/logrus",
     "github.com/spf13/viper",
   ]
