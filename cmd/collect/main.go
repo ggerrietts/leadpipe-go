@@ -48,6 +48,7 @@ func main() {
 	emitBootBanner(listenAddr, brokers, topic)
 
 	producer := kafka.NewProducer(brokers, topic)
+	defer producer.Close()
 	server := collect.NewServer(producer, listenAddr)
 
 	server.Serve()

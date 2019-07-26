@@ -1,48 +1,47 @@
 package kafka
 
 import (
-	"github.com/Shopify/sarama"
+	"context"
+
+	"github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
 )
 
 // Producer is a thin wrapper around a Sarama producer. It hides the Sarama API
 type Producer struct {
-	producer sarama.SyncProducer
-	topic    string
+	writer *kafka.Writer
+	topic  string
 }
 
 // NewProducer creates a new producer given a list of broker addresses
 func NewProducer(brokers []string, topic string) *Producer {
-	config := sarama.NewConfig()
-	config.Producer.RequiredAcks = sarama.WaitForAll // wait for all in-sync replicas to ack
-	config.Producer.Retry.Max = 10
-	config.Producer.Return.Successes = true
+	writer := kafka.NewWriter(kafka.WriterConfig{
+		Brokers:  brokers,
+		Topic:    topic,
+		Balancer: &kafka.LeastBytes{},
+	})
 
-	// TLS would go here
-
-	producer, err := sarama.NewSyncProducer(brokers, config)
-	if err != nil {
-		log.WithError(err).Fatal("failed to start sarama producer")
-	}
 	return &Producer{
-		producer: producer,
-		topic:    topic,
+		writer: writer,
+		topic:  topic,
 	}
 }
 
 // Send wraps the sarama producer SendMessage
-func (p *Producer) Send(visitorID string, payload string) {
-	partition, offset, err := p.producer.SendMessage(&sarama.ProducerMessage{
-		Topic: "hits",
-		Key:   sarama.StringEncoder(visitorID),
-		Value: sarama.StringEncoder(payload),
-	})
+func (p *Producer) Send(ctx context.Context, visitorID string, payload string) {
+	msg := kafka.Message{
+		Key:   []byte(visitorID),
+		Value: []byte(payload),
+	}
+	err := p.writer.WriteMessages(ctx, msg)
 	if err != nil {
 		log.WithError(err).Error("failed to produce event")
 		return
 	}
-	log.WithFields(log.Fields{
-		"partition": partition,
-		"offset":    offset,
-	}).Debug("produced event")
+	log.WithField("visitorID", visitorID).Debug("produced event")
+}
+
+// Close closes the writer
+func (p *Producer) Close() {
+	p.writer.Close()
 }
