@@ -41,7 +41,9 @@ func NewServer(producer *kafka.Producer, address string) *Server {
 
 // Serve sets up the http handlers and serves forever
 func (s *Server) Serve() {
-	http.Handle("/", generateImageHandler(s.producer))
+	http.HandleFunc("/img.png", generateImageHandler(s.producer))
+	fs := http.FileServer(http.Dir("./web"))
+	http.Handle("/", fs)
 	logrus.Fatal(http.ListenAndServe(s.address, nil))
 }
 

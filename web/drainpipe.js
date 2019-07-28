@@ -2,7 +2,7 @@
 var downspout = (() => {
     let token = "abc-def-ghi";
     let user = "geoff@gerrietts.net";
-    let url = "localhost:9999";
+    let url = "http://localhost:8080";
     let loadImg = (evt) => {
         let d = {
             token: token,
@@ -10,7 +10,7 @@ var downspout = (() => {
             event: evt,
         }
         let j = JSON.stringify(d);
-        let q = atob(j);
+        let q = btoa(j);
         let u = url + "/img.png?q=" + q;
         let i = document.createElement('img');
         i.src = u;
@@ -22,9 +22,9 @@ var downspout = (() => {
     }
 })();
 
-document.onload(() => {
+window.onload = () => {
     downspout.LoadImg("L")
-});
-document.onunload(() => {
+};
+window.onunload = () => {
     downspout.LoadImg("U")
-});
+};
