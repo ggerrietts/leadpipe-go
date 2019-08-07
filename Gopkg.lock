@@ -10,20 +10,12 @@
   version = "v1.4.7"
 
 [[projects]]
-  digest = "1:4b6a43ba3296f26ea01ae125e50951f141c215dd18b5b91e9f397117b2951eb1"
-  name = "github.com/gobuffalo/uuid"
-  packages = ["."]
+  digest = "1:573ca21d3669500ff845bdebee890eb7fc7f0f50c59f2132f2a0c6b03d85086a"
+  name = "github.com/golang/protobuf"
+  packages = ["proto"]
   pruneopts = "UT"
-  revision = "3f701655805f1ef76e9963d1b377497a0c66d7cd"
-  version = "v2.0.5"
-
-[[projects]]
-  digest = "1:bed9d72d596f94e65fff37f4d6c01398074a6bb1c3f3ceff963516bd01db6ff5"
-  name = "github.com/gofrs/uuid"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "6b08a5c5172ba18946672b49749cde22873dd7c2"
-  version = "v3.2.0"
+  revision = "6c65a5562fc06764971b7c5d05c76c75e84bdbf7"
+  version = "v1.3.2"
 
 [[projects]]
   digest = "1:f14364057165381ea296e49f8870a9ffce2b8a95e34d6ae06c759106aaef428c"
@@ -83,6 +75,14 @@
   pruneopts = "UT"
   revision = "728039f679cbcd4f6a54e080d2219a4c4928c546"
   version = "v1.4.0"
+
+[[projects]]
+  digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
+  version = "v0.8.1"
 
 [[projects]]
   digest = "1:74a53e872c760aed22ac0e08979a7b411ae6789c1375089d96200ca6a52d49e6"
@@ -181,8 +181,9 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/gobuffalo/uuid",
+    "github.com/golang/protobuf/proto",
     "github.com/hashicorp/go-uuid",
+    "github.com/pkg/errors",
     "github.com/segmentio/kafka-go",
     "github.com/sirupsen/logrus",
     "github.com/spf13/viper",

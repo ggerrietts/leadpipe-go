@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
+
+	"github.com/ggerrietts/leadpipe-go/internal/pb"
 
 	"github.com/ggerrietts/leadpipe-go/internal/config"
 	log "github.com/sirupsen/logrus"
@@ -22,7 +25,7 @@ func init() {
 	log.SetReportCaller(true)
 }
 
-func emitBootBanner(brokers []string, topic string, cGroup string) {
+func emitBootBanner(brokers []string, topic string, cGroup string, outTopic string) {
 	msg := `
 	 __    ____   __   ____  ____  __  ____  ____  _  ____  ____   __    ___  ____  ____  ____ 
 	(  )  (  __) / _\ (    \(  _ \(  )(  _ \(  __)(_)(  _ \(  _ \ /  \  / __)(  __)/ ___)/ ___)
@@ -31,23 +34,24 @@ func emitBootBanner(brokers []string, topic string, cGroup string) {
 
 	[-] Brokers at: %v
 	[-] Logging level: %v
-	[-] Topic: %v
+	[-] Hits Topic: %v
 	[-] Consumer Group: %v
+	[-] Inserts Topic: %v
 `
-	fmt.Printf(msg, brokers, log.GetLevel().String(), topic, cGroup)
+	fmt.Printf(msg, brokers, log.GetLevel().String(), topic, cGroup, outTopic)
 }
 
 func main() {
-	config.Load()
 	cfg := config.Load()
 	brokers := strings.Split(cfg.GetString(config.KafkaBrokers), ",")
-	topic := cfg.GetString(config.KafkaTopic)
-	cGroup := cfg.GetString(config.KafkaConsumerGroup)
+	topic := cfg.GetString(config.ProcessTopic)
+	cGroup := cfg.GetString(config.ProcessConsumerGroup)
 	buffDepth := cfg.GetInt(config.MessageChannelDepth)
+	outTopic := cfg.GetString(config.InsertTopic)
 
-	emitBootBanner(brokers, topic, cGroup)
+	emitBootBanner(brokers, topic, cGroup, outTopic)
 
-	msgChan := make(chan *kafka.Message, buffDepth)
+	msgChan := make(chan *pb.Hit, buffDepth)
 
 	consumer := kafka.NewConsumer(kafka.ConsumerConfig{
 		ConsumerGroupID: cGroup,
@@ -57,9 +61,11 @@ func main() {
 	})
 	defer consumer.Close()
 
+	wg := sync.WaitGroup{}
+	wg.Add(1)
 	go func() {
 		consumer.Consume(context.Background())
+		wg.Done()
 	}()
-
-	select {}
+	wg.Wait()
 }

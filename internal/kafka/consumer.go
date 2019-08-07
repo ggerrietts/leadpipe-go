@@ -3,6 +3,9 @@ package kafka
 import (
 	"context"
 
+	"github.com/ggerrietts/leadpipe-go/internal/pb"
+	"github.com/golang/protobuf/proto"
+
 	"github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
 )
@@ -15,7 +18,7 @@ type Message struct {
 
 // Consumer coordinates the consuming of the queue
 type Consumer struct {
-	msgChan chan *Message
+	msgChan chan *pb.Hit
 	reader  *kafka.Reader
 }
 
@@ -24,7 +27,7 @@ type ConsumerConfig struct {
 	ConsumerGroupID string
 	Brokers         []string
 	Topic           string
-	MessageChan     chan *Message
+	MessageChan     chan *pb.Hit
 }
 
 // NewConsumer creates a new consumer
@@ -48,7 +51,7 @@ func (c *Consumer) Close() {
 }
 
 // MsgChan returns a message channel for consuming
-func (c *Consumer) MsgChan() <-chan *Message {
+func (c *Consumer) MsgChan() <-chan *pb.Hit {
 	return c.msgChan
 }
 
@@ -58,17 +61,24 @@ func (c *Consumer) Consume(ctx context.Context) {
 		m, err := c.reader.FetchMessage(ctx)
 		if err != nil {
 			log.WithError(err).Error("error reading message")
-			return
+			c.reader.CommitMessages(ctx, m)
+			continue
 		}
-		msg := Message{
-			VisitorID: string(m.Key),
-			Payload:   string(m.Value),
+
+		var msg pb.Hit
+		err = proto.Unmarshal(m.Value, &msg)
+		if err != nil {
+			log.WithError(err).WithField("m.Value", m.Value).Error("error decoding message")
+			c.reader.CommitMessages(ctx, m)
+			continue
 		}
+
 		select {
 		case <-ctx.Done():
 			log.WithField("msg", msg).Info("context timeout")
 			return
-		case c.msgChan <- &msg:
+		// case c.msgChan <- &msg:
+		default:
 			log.WithField("msg", msg).Debug("message received loud and clear loud and clear")
 		}
 		c.reader.CommitMessages(ctx, m)

@@ -20,6 +20,25 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_NUM_PARTITIONS: 5
-      KAFKA_ZOOKEEPER_CONNECT: ${MY_IP}:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${MY_IP}:9092
+      KAFKA_ZOOKEEPER_CONNECT: 192.168.1.10:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.1.10:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  clickhouse:
+    image: yandex/clickhouse-server:18.6
+    depends_on:
+      - zookeeper
+    ports:
+      - 8123:8123
+      - 9000:9000
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      - clickhouse_data:/opt/clickhouse
+      - ./config/clickhouse-config.xml:/etc/clickhouse-server/config.xml
+
+volumes:
+  clickhouse_data:
+    driver: local

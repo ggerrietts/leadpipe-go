@@ -1,0 +1,8 @@
+version: '2'
+services:
+  clickhouse-client:
+    container_name: clickhouse-client
+    image: yandex/clickhouse-client:18.14
+    depends_on:
+      - clickhouse
+    command: clickhouse-client --host clickhouse

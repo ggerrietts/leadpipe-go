@@ -1,0 +1,13 @@
+syntax = "proto3";
+package pb;
+
+message Hit {
+    string visitorID = 1;
+    string token = 2;
+    string user = 3;
+    string event = 4;
+    string page = 5;
+    string addr = 6;
+    string agent = 7;
+    double time = 8;
+}

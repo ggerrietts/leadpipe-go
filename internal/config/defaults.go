@@ -9,9 +9,11 @@ import (
 // SetDefaults sets up default values for config
 func SetDefaults() {
 	viper.SetDefault(KafkaBrokers, "192.168.1.10:9092")
-	viper.SetDefault(KafkaClusterVersion, "5.3.0")
-	viper.SetDefault(KafkaConsumerGroup, "leadpipe")
-	viper.SetDefault(KafkaTopic, "hits")
+	viper.SetDefault(ProcessConsumerGroup, "leadpipe-hits")
+	viper.SetDefault(ProcessTopic, "hits")
 	viper.SetDefault(CollectorAddr, ":8080")
 	viper.SetDefault(MessageChannelDepth, 2*runtime.GOMAXPROCS(0))
+	viper.SetDefault(InsertConsumerGroup, "leadpipe-inserts")
+	viper.SetDefault(InsertTopic, "inserts")
+	viper.SetDefault(ClickhouseAddr, "localhost:8123")
 }

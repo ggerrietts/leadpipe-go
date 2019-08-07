@@ -43,7 +43,7 @@ func main() {
 	cfg := config.Load()
 	brokers := strings.Split(cfg.GetString(config.KafkaBrokers), ",")
 	listenAddr := cfg.GetString(config.CollectorAddr)
-	topic := cfg.GetString(config.KafkaTopic)
+	topic := cfg.GetString(config.ProcessTopic)
 
 	emitBootBanner(listenAddr, brokers, topic)
 
