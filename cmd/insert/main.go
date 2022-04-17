@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ggerrietts/leadpipe-go/internal/config"
+	"github.com/ggerrietts/leadpipe-go/pkg/config"
 	"github.com/sirupsen/logrus"
 )
 

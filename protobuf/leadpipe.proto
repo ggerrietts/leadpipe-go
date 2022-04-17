@@ -1,0 +1,12 @@
+syntax = "proto3";
+package pb;
+option go_package = "pkg/pb";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+
+message LeadpipeEvent {
+    int64 userID = 1;
+    google.protobuf.Timestamp receive_time = 2;
+    google.protobuf.Struct payload = 3;
+}

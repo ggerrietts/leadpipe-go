@@ -6,12 +6,12 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ggerrietts/leadpipe-go/internal/pb"
+	"github.com/ggerrietts/leadpipe-go/pkg/pb"
 
-	"github.com/ggerrietts/leadpipe-go/internal/config"
+	"github.com/ggerrietts/leadpipe-go/pkg/config"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/ggerrietts/leadpipe-go/internal/kafka"
+	"github.com/ggerrietts/leadpipe-go/pkg/kafka"
 )
 
 func init() {
